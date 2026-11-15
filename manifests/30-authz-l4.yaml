@@ -1,0 +1,16 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: echo-only-from-demo
+  namespace: demo
+spec:
+  selector:
+    matchLabels: { app: echo }
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/demo/sa/default
+              - cluster.local/ns/demo/sa/internal-gw-istio
+              - cluster.local/ns/demo/sa/waypoint

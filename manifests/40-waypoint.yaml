@@ -1,0 +1,43 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: waypoint
+  namespace: demo
+  labels:
+    istio.io/waypoint-for: service
+spec:
+  gatewayClassName: istio-waypoint
+  listeners:
+    - name: mesh
+      port: 15008
+      protocol: HBONE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo
+  namespace: demo
+  labels:
+    istio.io/use-waypoint: waypoint
+spec:
+  selector: { app: echo }
+  ports:
+    - port: 80
+      targetPort: 80
+---
+# L7 rule, enforced by the waypoint: block /admin
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-admin-path
+  namespace: demo
+spec:
+  targetRefs:
+    - kind: Gateway
+      group: gateway.networking.k8s.io
+      name: waypoint
+  action: DENY
+  rules:
+    - to:
+        - operation:
+            paths: ["/admin*"]
